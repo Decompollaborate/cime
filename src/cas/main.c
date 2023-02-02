@@ -2,6 +2,7 @@
 #include <string.h>
 #include "rabbitizer.h"
 
+#if 0
 int main() {
     printf("Reading from stdin. Press ctrl-C to exit\n");
 
@@ -53,3 +54,4 @@ int main() {
 
     return 0;
 }
+#endif
