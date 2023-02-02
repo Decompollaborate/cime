@@ -1,11 +1,23 @@
+%define parse.error verbose
+%define api.pure true
+%locations
+%token-table
+%glr-parser
+%lex-param {void *scanner}
+%parse-param {void *scanner}
+
+
 %{
 #include <stdio.h>
-extern int yylex();
-extern int yyparse();
-extern FILE *yyin;
+#include "InstrLexer.tab.h"
+//#include "InstrLexer.yy.h"
+
+//extern int yylex();
+//extern int yyparse();
+//extern FILE *yyin;
 extern int linenum;
 
-void yyerror(const char *s);
+int yyerror(YYLTYPE *locp, void* scanner, const char *msg) ;
 %}
 
 %union {
@@ -58,27 +70,25 @@ Operand:
 
 %%
 
-int main(/*int argc, char **argv*/) {
-    #if 1
-    yyin = stdin;
-    #else
-    FILE *f = fopen("test.s", "r");
-    if (f == NULL) {
-        abort();
-    }
-    yyin = f;
-    #endif
-
-    yyparse();
-
-    if (yyin != stdin) {
-        fclose(yyin);
-    }
-
-    return 0;
-}
-
+#if 0
 void yyerror(const char *s) {
     fprintf(stderr, "Unknown thingy found: '%s' at line %d\n\tgonna crash now!\n", s, linenum);
     abort();
 }
+#endif
+
+int
+yyerror(YYLTYPE *locp, void* scanner, const char *msg) {
+  if (locp) {
+    fprintf(stderr, "parse error: %s (:%d.%d -> :%d.%d)\n",
+                    msg,
+                    locp->first_line, locp->first_column,
+                    locp->last_line,  locp->last_column
+    );
+    /* todo: add some fancy ^^^^^ error handling here */
+  } else {
+    fprintf(stderr, "parse error: %s\n", msg);
+  }
+  return (0);
+}
+
