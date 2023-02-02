@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "lib/rabbitizer/include"
+            ],
+            "defines": [
+                "RAB_SANITY_CHECKS=1",
+                "DEVELOPMENT=1"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "intelliSenseMode": "linux-clang-x64",
+            "cStandard": "c11"
+        }
+    ],
+    "version": 4
+}
