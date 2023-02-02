@@ -3,6 +3,7 @@
 extern int yylex();
 extern int yyparse();
 extern FILE *yyin;
+extern int linenum;
 
 void yyerror(const char *s);
 %}
@@ -14,53 +15,47 @@ void yyerror(const char *s);
 
 %token <sval> T_IDENTIFIER
 %token <ival> T_INT
-%token T_DOLLAR
-%token T_COMMA
-%token T_PAREN_LEFT
-%token T_PAREN_RIGHT
+
+
+%type <sval> Instruction Opcode Operand
 
 %%
 
-test:
-    test T_INT      {
-        printf("bison found an int: %i\n", $2);
+Instruction:
+    Opcode {
+            //$$ = $1;
+            printf("Opcode: %s\n", $1);
         }
-    | test T_IDENTIFIER {
-        printf("bison found a identifier: %s\n", $2);
-        free($2);
+    | Opcode Operand {
+            printf("Opcode: %s, Operands: [%s]\n", $1, $2);
         }
-    | test T_DOLLAR      {
-        printf("bison found a dollar\n");
+    | Opcode Operand ',' Operand {
+            printf("Opcode: %s, Operands: [%s, %s]\n", $1, $2, $4);
         }
-    | test T_COMMA     {
-        printf("bison found a comma\n");
-        }
-    | test T_PAREN_LEFT      {
-        printf("bison found an paren left\n");
-        }
-    | test T_PAREN_RIGHT      {
-        printf("bison found an paren right\n");
-        }
-    | T_INT            {
-        printf("bison found an int: %i\n", $1);
-        }
-    | T_IDENTIFIER         {
-        printf("bison found a identifier: %s\n", $1);
-        free($1);
-        }
-    | T_DOLLAR      {
-        printf("bison found a dollar\n");
-        }
-    | T_COMMA      {
-        printf("bison found a comma\n");
-        }
-    | T_PAREN_LEFT      {
-        printf("bison found an paren left\n");
-        }
-    | T_PAREN_RIGHT      {
-        printf("bison found an paren right\n");
+    | Opcode Operand ',' Operand ',' Operand {
+            printf("Opcode: %s, Operands: [%s, %s, %s]\n", $1, $2, $4, $6);
         }
     ;
+
+Opcode:
+    T_IDENTIFIER
+    ;
+
+Operand:
+    '$' T_IDENTIFIER {
+        $$ = malloc(strlen($2) + 2);
+        $$[0] = '$';
+        strcpy(&$$[1], $2);
+        free($2);
+        }
+    | T_IDENTIFIER
+    | T_INT {
+        $$ = malloc(64);
+        sprintf($$, "0x%X", $1);
+        }
+
+    ;
+
 %%
 
 int main(/*int argc, char **argv*/) {
@@ -71,7 +66,6 @@ int main(/*int argc, char **argv*/) {
     if (f == NULL) {
         abort();
     }
-
     yyin = f;
     #endif
 
@@ -85,6 +79,6 @@ int main(/*int argc, char **argv*/) {
 }
 
 void yyerror(const char *s) {
-    fprintf(stderr, "Unknown thingy found: '%s'\n\tgonna crash now!\n", s);;
+    fprintf(stderr, "Unknown thingy found: '%s' at line %d\n\tgonna crash now!\n", s, linenum);
     abort();
 }
