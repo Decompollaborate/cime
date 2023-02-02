@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:Decompollaborate/rabbitizer.git
+	branch = master
+	commit = f7ac917f80b2cd1c5d72ed9345c453b722d74138
+	parent = 169fcbb80674eeca92e7848054cf894f86511976
+	method = merge
+	cmdver = 0.4.3
