@@ -9,12 +9,11 @@
 
 %{
 #include <stdio.h>
+#include "OperandData.h"
 #include "InstrLexer.tab.h"
-//#include "InstrLexer.yy.h"
 
-//extern int yylex();
-//extern int yyparse();
-//extern FILE *yyin;
+
+
 extern int linenum;
 
 int yyerror(YYLTYPE *locp, void* scanner, const char *msg) ;
@@ -23,29 +22,53 @@ int yyerror(YYLTYPE *locp, void* scanner, const char *msg) ;
 %union {
     int ival;
     char *sval;
+    OperandData_Data operandData;
 }
 
 %token <sval> T_IDENTIFIER
+%token <sval> T_REG
 %token <ival> T_INT
 
-
-%type <sval> Instruction Opcode Operand
+%type <sval> Opcode
+%type <operandData> Operand
+%type <operandData> Register
 
 %%
+
+OtherInstruction:
+    OtherInstruction Instruction
+    | Instruction
+    ;
 
 Instruction:
     Opcode {
             //$$ = $1;
             printf("Opcode: %s\n", $1);
+            free($1);
         }
     | Opcode Operand {
-            printf("Opcode: %s, Operands: [%s]\n", $1, $2);
+            printf("Opcode: %s, Operands: [\n    ", $1);
+            OperandData_Data_fprint(stdout, &$2);
+            printf("\n]\n");
+            free($1);
         }
     | Opcode Operand ',' Operand {
-            printf("Opcode: %s, Operands: [%s, %s]\n", $1, $2, $4);
+            printf("Opcode: %s, Operands: [\n    ", $1);
+            OperandData_Data_fprint(stdout, &$2);
+            printf("\n    ");
+            OperandData_Data_fprint(stdout, &$4);
+            printf("\n]\n");
+            free($1);
         }
     | Opcode Operand ',' Operand ',' Operand {
-            printf("Opcode: %s, Operands: [%s, %s, %s]\n", $1, $2, $4, $6);
+            printf("Opcode: %s, Operands: [\n    ", $1);
+            OperandData_Data_fprint(stdout, &$2);
+            printf("\n    ");
+            OperandData_Data_fprint(stdout, &$4);
+            printf("\n    ");
+            OperandData_Data_fprint(stdout, &$6);
+            printf("\n]\n");
+            free($1);
         }
     ;
 
@@ -54,18 +77,39 @@ Opcode:
     ;
 
 Operand:
-    '$' T_IDENTIFIER {
-        $$ = malloc(strlen($2) + 2);
-        $$[0] = '$';
-        strcpy(&$$[1], $2);
-        free($2);
-        }
-    | T_IDENTIFIER
+    Register
     | T_INT {
-        $$ = malloc(64);
-        sprintf($$, "0x%X", $1);
+        $$.type = OPERANDDATA_TYPE_IMM;
+        $$.data.imm.immVal = $1;
         }
+    | T_INT '(' Register ')' {
+        if ($3.type != OPERANDDATA_TYPE_GPR) {
+            fprintf(stderr, "Error at line %i: Found ", linenum);
+            OperandData_Data_fprint(stdout, &$3);
+            fprintf(stderr, " when a GPR was expected.\n");
+            exit(-1);
+        }
+        $$.type = OPERANDDATA_TYPE_IMMBASE;
+        $$.data.immBase.immVal = $1;
+        $$.data.immBase.registerNum = $3.data.reg.registerNum;
+    }
+    ;
 
+Register:
+    T_REG {
+        if (OperandData_Data_ParseRegister(&$$, $1) < 0) {
+            fprintf(stderr, "error at line %d\n", linenum);
+            exit(-1);
+        }
+        free($1);
+        }
+    | T_IDENTIFIER {
+        if (OperandData_Data_ParseRegister(&$$, $1) < 0) {
+            fprintf(stderr, "error at line %d\n", linenum);
+            exit(-1);
+        }
+        free($1);
+        }
     ;
 
 %%
@@ -79,16 +123,16 @@ void yyerror(const char *s) {
 
 int
 yyerror(YYLTYPE *locp, void* scanner, const char *msg) {
-  if (locp) {
-    fprintf(stderr, "parse error: %s (:%d.%d -> :%d.%d)\n",
-                    msg,
-                    locp->first_line, locp->first_column,
-                    locp->last_line,  locp->last_column
-    );
-    /* todo: add some fancy ^^^^^ error handling here */
-  } else {
-    fprintf(stderr, "parse error: %s\n", msg);
-  }
-  return (0);
+    if (locp) {
+        fprintf(stderr, "parse error: %s (:%d.%d -> :%d.%d)\n",
+                        msg,
+                        locp->first_line, locp->first_column,
+                        locp->last_line,  locp->last_column
+        );
+        /* todo: add some fancy ^^^^^ error handling here */
+    } else {
+        fprintf(stderr, "parse error: %s\n", msg);
+    }
+    return (0);
 }
 

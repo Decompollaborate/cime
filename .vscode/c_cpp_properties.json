@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "lib/rabbitizer/include"
+                "lib/rabbitizer/include",
+                "src"
             ],
             "defines": [
                 "RAB_SANITY_CHECKS=1",

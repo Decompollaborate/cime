@@ -12,7 +12,7 @@ CXXSTD          := -std=c++17
 CFLAGS          := -fPIC
 LDFLAGS         := -L lib/rabbitizer/build -lrabbitizer
 WARNINGS        := -Wall -Wextra -Wpedantic
-WARNINGS        += -Werror=vla -Werror=switch -Werror=implicit-fallthrough -Werror=unused-function -Werror=unused-parameter -Werror=shadow -Werror=switch -Werror=implicit-function-declaration -Werror=incompatible-pointer-types
+WARNINGS        += -Werror=vla -Werror=switch -Werror=implicit-fallthrough -Werror=unused-function -Werror=shadow -Werror=switch -Werror=implicit-function-declaration -Werror=incompatible-pointer-types
 
 
 ifeq ($(CC),gcc)
@@ -20,7 +20,7 @@ ifeq ($(CC),gcc)
 endif
 
 ifeq ($(DEBUG),0)
-	OPTFLAGS    := -Os -g
+	OPTFLAGS    := -Os -gdwarf-4
 else
 	OPTFLAGS    := -O0 -gdwarf-4
 	CFLAGS      += -DDEVELOPMENT=1
@@ -74,12 +74,14 @@ $(shell mkdir -p $(foreach dir,$(SRC_DIRS),build/$(dir)))
 
 all: $(O_FILES) build/cas.elf
 
+setup: $(GEN_C_FILES) $(LIBRARIES)
+
 clean:
 	$(RM) -rf build
-	$(RM) -rf $(GEN_C_FILES)
+	$(RM) -rf $(GEN_C_FILES) $(GEN_C_FILES:.c=.h)
 
 distclean: clean
-	make -C lib/rabbitizer distclean
+	make -C lib/rabbitizer clean
 
 format:
 	clang-format-11 -i -style=file $(C_FILES)
