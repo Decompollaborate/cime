@@ -29,7 +29,7 @@ extern int linenum;
 %%
 
 [ \t]                               ; /* skip the space */
-\n                                  { ++linenum; }
+(#.*)?\n                            { ++linenum; }
 [a-zA-Z][a-zA-Z0-9_\.]*             { yylval->sval = malloc(strlen(yytext)+1); strcpy(yylval->sval, yytext); return T_IDENTIFIER; }
 \$[a-zA-Z][a-zA-Z0-9_\.]*           { yylval->sval = malloc(strlen(yytext)+1); strcpy(yylval->sval, yytext); return T_REG; }
 -?[0-9]+                              { sscanf(yytext, "%d", &yylval->ival); return T_INT; }
