@@ -3,6 +3,7 @@
 #include "rabbitizer.h"
 
 #include "instr_lexer/OperandData.h"
+#include "instr_lexer/InstructionData.h"
 #include "instr_lexer/InstrLexer.tab.h"
 #include "instr_lexer/InstrLexer.yy.h"
 

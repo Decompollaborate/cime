@@ -10,6 +10,7 @@
 %{
 #include <stdio.h>
 #include "OperandData.h"
+#include "InstructionData.h"
 #include "InstrLexer.tab.h"
 
 
@@ -22,6 +23,8 @@ int yyerror(YYLTYPE *locp, void* scanner, const char *msg) ;
 %union {
     int ival;
     char *sval;
+    InstructionData instrData;
+    RabbitizerInstrId rabInstrId;
     OperandData_Data operandData;
 }
 
@@ -29,51 +32,57 @@ int yyerror(YYLTYPE *locp, void* scanner, const char *msg) ;
 %token <sval> T_REG
 %token <ival> T_INT
 
-%type <sval> Opcode
+%type <instrData> Instruction
+%type <rabInstrId> Opcode
 %type <operandData> Operand
 %type <operandData> Register
 
 %%
 
 OtherInstruction:
-    OtherInstruction Instruction
-    | Instruction
+    OtherInstruction Instruction {
+        InstructionData_fprint(stdout, &$2);
+        fprintf(stdout, "\n");
+    }
+    | Instruction {
+        InstructionData_fprint(stdout, &$1);
+        fprintf(stdout, "\n");
+    }
     ;
 
 Instruction:
     Opcode {
-            //$$ = $1;
-            printf("Opcode: %s\n", $1);
-            free($1);
-        }
+            $$.opcode = $1;
+            $$.operandCount = 0;
+    }
     | Opcode Operand {
-            printf("Opcode: %s, Operands: [\n    ", $1);
-            OperandData_Data_fprint(stdout, &$2);
-            printf("\n]\n");
-            free($1);
-        }
+            $$.opcode = $1;
+            $$.operandCount = 1;
+            $$.operands[0] = $2;
+    }
     | Opcode Operand ',' Operand {
-            printf("Opcode: %s, Operands: [\n    ", $1);
-            OperandData_Data_fprint(stdout, &$2);
-            printf("\n    ");
-            OperandData_Data_fprint(stdout, &$4);
-            printf("\n]\n");
-            free($1);
-        }
+            $$.opcode = $1;
+            $$.operandCount = 2;
+            $$.operands[0] = $2;
+            $$.operands[1] = $4;
+    }
     | Opcode Operand ',' Operand ',' Operand {
-            printf("Opcode: %s, Operands: [\n    ", $1);
-            OperandData_Data_fprint(stdout, &$2);
-            printf("\n    ");
-            OperandData_Data_fprint(stdout, &$4);
-            printf("\n    ");
-            OperandData_Data_fprint(stdout, &$6);
-            printf("\n]\n");
-            free($1);
-        }
+            $$.opcode = $1;
+            $$.operandCount = 3;
+            $$.operands[0] = $2;
+            $$.operands[1] = $4;
+            $$.operands[2] = $6;
+    }
     ;
 
 Opcode:
-    T_IDENTIFIER
+    T_IDENTIFIER {
+        $$ = getOpcodeFromName($1);
+        if (!RabbitizerInstrId_isValid($$)) {
+            fprintf(stderr, "Error at line %i: Found '%s' when an opcode was expected.\n", linenum, $1);
+            exit(-1);
+        }
+    }
     ;
 
 Operand:
@@ -81,7 +90,7 @@ Operand:
     | T_INT {
         $$.type = OPERANDDATA_TYPE_IMM;
         $$.data.imm.immVal = $1;
-        }
+    }
     | T_INT '(' Register ')' {
         if ($3.type != OPERANDDATA_TYPE_GPR) {
             fprintf(stderr, "Error at line %i: Found ", linenum);
@@ -102,14 +111,14 @@ Register:
             exit(-1);
         }
         free($1);
-        }
+    }
     | T_IDENTIFIER {
         if (OperandData_Data_ParseRegister(&$$, $1) < 0) {
             fprintf(stderr, "error at line %d\n", linenum);
             exit(-1);
         }
         free($1);
-        }
+    }
     ;
 
 %%

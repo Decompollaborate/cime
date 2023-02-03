@@ -15,9 +15,10 @@
 int fileno(FILE*);
 
 #include "OperandData.h"
+#include "InstructionData.h"
 #include "InstrLexer.tab.h"
 
-extern int yylex();
+// extern int yylex();
 
 
 extern int linenum;
@@ -39,12 +40,3 @@ extern int linenum;
 %%
 
 int linenum = 1;
-#if 0
-
-int main(/*int argc, char **argv*/) {
-    yyin = stdin;
-
-    // lex through the input:
-    while (yylex());
-}
-#endif
