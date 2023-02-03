@@ -10,6 +10,9 @@
 int main(int argc, char **argv) {
     FILE *inFile;
 
+    // disable buffering in stdout
+    setvbuf(stdout, NULL, _IONBF, 0); 
+
     if (argc > 1) {
         inFile = fopen(argv[1], "r");
         if (inFile == NULL) {

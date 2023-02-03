@@ -1,4 +1,6 @@
+# 26310001
 addiu       $s1, $s1, 0x1
+# 0
 nop
-# this is a comment
+# 87654321
 lh          $a1, 0x4321($k1)

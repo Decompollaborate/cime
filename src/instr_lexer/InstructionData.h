@@ -20,6 +20,8 @@ typedef struct InstructionData {
 
 RabbitizerInstrId getOpcodeFromName(const char *name);
 
+int64_t InstructionData_toWord(const InstructionData *data);
+
 void InstructionData_fprint(FILE* f, const InstructionData *data);
 
 

@@ -98,7 +98,7 @@ void OperandData_Data_fprint(FILE *f, const OperandData_Data *data) {
             fprintf(f, "IMM, value: %X", data->data.imm.immVal);
             break;
         case OPERANDDATA_TYPE_IMMBASE:
-            fprintf(f, "IMMBASE, imm: %X, reg: %d", data->data.immBase.immVal, data->data.immBase.registerNum);
+            fprintf(f, "IMMBASE, imm: 0x%X, reg: %d", data->data.immBase.immVal, data->data.immBase.registerNum);
             break;
     }
 

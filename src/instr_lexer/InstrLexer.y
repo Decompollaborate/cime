@@ -41,12 +41,32 @@ int yyerror(YYLTYPE *locp, void* scanner, const char *msg) ;
 
 OtherInstruction:
     OtherInstruction Instruction {
+        int64_t word = InstructionData_toWord(&$2);
+
         InstructionData_fprint(stdout, &$2);
-        fprintf(stdout, "\n");
+
+        if (word < 0) {
+            fprintf(stderr, "\nError at line %i: instruction is invalid (%ld).\n", linenum, word);
+            exit(-1);
+        }
+
+        fprintf(stdout, "\nword: %08lX", word);
+
+        fprintf(stdout, "\n\n");
     }
     | Instruction {
+        int64_t word = InstructionData_toWord(&$1);
+
         InstructionData_fprint(stdout, &$1);
-        fprintf(stdout, "\n");
+
+        if (word < 0) {
+            fprintf(stderr, "\nError at line %i: instruction is invalid (%ld).\n", linenum, word);
+            exit(-1);
+        }
+
+        fprintf(stdout, "\nword: %08lX", word);
+
+        fprintf(stdout, "\n\n");
     }
     ;
 
@@ -79,7 +99,7 @@ Opcode:
     T_IDENTIFIER {
         $$ = getOpcodeFromName($1);
         if (!RabbitizerInstrId_isValid($$)) {
-            fprintf(stderr, "Error at line %i: Found '%s' when an opcode was expected.\n", linenum, $1);
+            fprintf(stderr, "\nError at line %i: Found '%s' when an opcode was expected.\n", linenum, $1);
             exit(-1);
         }
     }
@@ -93,9 +113,9 @@ Operand:
     }
     | T_INT '(' Register ')' {
         if ($3.type != OPERANDDATA_TYPE_GPR) {
-            fprintf(stderr, "Error at line %i: Found ", linenum);
+            fprintf(stderr, "\nError at line %i: Found ", linenum);
             OperandData_Data_fprint(stdout, &$3);
-            fprintf(stderr, " when a GPR was expected.\n");
+            fprintf(stderr, "\n when a GPR was expected.\n");
             exit(-1);
         }
         $$.type = OPERANDDATA_TYPE_IMMBASE;
@@ -107,14 +127,14 @@ Operand:
 Register:
     T_REG {
         if (OperandData_Data_ParseRegister(&$$, $1) < 0) {
-            fprintf(stderr, "error at line %d\n", linenum);
+            fprintf(stderr, "\nerror at line %d\n", linenum);
             exit(-1);
         }
         free($1);
     }
     | T_IDENTIFIER {
         if (OperandData_Data_ParseRegister(&$$, $1) < 0) {
-            fprintf(stderr, "error at line %d\n", linenum);
+            fprintf(stderr, "\nerror at line %d\n", linenum);
             exit(-1);
         }
         free($1);
@@ -125,7 +145,7 @@ Register:
 
 #if 0
 void yyerror(const char *s) {
-    fprintf(stderr, "Unknown thingy found: '%s' at line %d\n\tgonna crash now!\n", s, linenum);
+    fprintf(stderr, "\nUnknown thingy found: '%s' at line %d\n\tgonna crash now!\n", s, linenum);
     abort();
 }
 #endif
@@ -133,14 +153,14 @@ void yyerror(const char *s) {
 int
 yyerror(YYLTYPE *locp, void* scanner, const char *msg) {
     if (locp) {
-        fprintf(stderr, "parse error: %s (:%d.%d -> :%d.%d)\n",
+        fprintf(stderr, "\nparse error: %s (:%d.%d -> :%d.%d)\n",
                         msg,
                         locp->first_line, locp->first_column,
                         locp->last_line,  locp->last_column
         );
         /* todo: add some fancy ^^^^^ error handling here */
     } else {
-        fprintf(stderr, "parse error: %s\n", msg);
+        fprintf(stderr, "\nparse error: %s\n", msg);
     }
     return (0);
 }
