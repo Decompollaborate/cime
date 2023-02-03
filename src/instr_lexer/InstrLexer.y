@@ -5,19 +5,25 @@
 %glr-parser
 %lex-param {void *scanner}
 %parse-param {void *scanner}
+%parse-param {NodeDataVector *vector}
+//%define parse.trace
 
 
 %{
 #include <stdio.h>
 #include "OperandData.h"
 #include "InstructionData.h"
+#include "NodeData.h"
+
 #include "InstrLexer.tab.h"
 
 
 
 extern int linenum;
 
-int yyerror(YYLTYPE *locp, void* scanner, const char *msg) ;
+int yyerror(YYLTYPE *locp, void* scanner, NodeDataVector *vector, const char *msg) ;
+
+#include "InstrLexer.yy.h"
 %}
 
 %union {
@@ -41,32 +47,12 @@ int yyerror(YYLTYPE *locp, void* scanner, const char *msg) ;
 
 OtherInstruction:
     OtherInstruction Instruction {
-        int64_t word = InstructionData_toWord(&$2);
-
-        InstructionData_fprint(stdout, &$2);
-
-        if (word < 0) {
-            fprintf(stderr, "\nError at line %i: instruction is invalid (%ld).\n", linenum, word);
-            exit(-1);
-        }
-
-        fprintf(stdout, "\nword: %08lX", word);
-
-        fprintf(stdout, "\n\n");
+        NodeData_Data data = {NODEDATA_TYPE_INSTRUCTION, {.instruction = $2} };
+        NodeDataVector_append(vector, &data);
     }
     | Instruction {
-        int64_t word = InstructionData_toWord(&$1);
-
-        InstructionData_fprint(stdout, &$1);
-
-        if (word < 0) {
-            fprintf(stderr, "\nError at line %i: instruction is invalid (%ld).\n", linenum, word);
-            exit(-1);
-        }
-
-        fprintf(stdout, "\nword: %08lX", word);
-
-        fprintf(stdout, "\n\n");
+        NodeData_Data data = {NODEDATA_TYPE_INSTRUCTION, {.instruction = $1} };
+        NodeDataVector_append(vector, &data);
     }
     ;
 
@@ -102,6 +88,7 @@ Opcode:
             fprintf(stderr, "\nError at line %i: Found '%s' when an opcode was expected.\n", linenum, $1);
             exit(-1);
         }
+        free($1);
     }
     ;
 
@@ -151,7 +138,7 @@ void yyerror(const char *s) {
 #endif
 
 int
-yyerror(YYLTYPE *locp, void* scanner, const char *msg) {
+yyerror(YYLTYPE *locp, void* scanner, NodeDataVector *vector, const char *msg) {
     if (locp) {
         fprintf(stderr, "\nparse error: %s (:%d.%d -> :%d.%d)\n",
                         msg,

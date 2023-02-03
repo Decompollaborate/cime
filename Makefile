@@ -118,7 +118,7 @@ build/%.o: %.c | $(GEN_C_FILES)
 #### Libraries ####
 
 lib/rabbitizer/build/librabbitizer.a:
-	make -C lib/rabbitizer static DEBUG=$(DEBUG) WERROR=$(WERROR) ASAN=$(ASAN)
+	make -C lib/rabbitizer static DEBUG=$(DEBUG) WERROR=$(WERROR) ASAN=$(ASAN) OPTFLAGS="$(OPTFLAGS)"
 
 
 
