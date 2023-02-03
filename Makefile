@@ -45,7 +45,7 @@ O_FILES         := $(foreach f,$(C_FILES:.c=.o),build/$f)
 DEP_FILES       := $(O_FILES:%.o=%.d)
 
 
-CAS_SRC_DIRS    := $(shell find src/cas -type d)
+CAS_SRC_DIRS    := $(shell find src/cime -type d)
 CAS_C_FILES     := $(foreach dir,$(CAS_SRC_DIRS),$(wildcard $(dir)/*.c))
 CAS_O_FILES     := $(foreach f,$(CAS_C_FILES:.c=.o),build/$f)
 
@@ -72,7 +72,7 @@ $(shell mkdir -p $(foreach dir,$(SRC_DIRS),build/$(dir)))
 
 #### Main Targets ###
 
-all: $(O_FILES) build/cas.elf
+all: $(O_FILES) build/cime.elf
 
 setup: $(GEN_C_FILES) $(LIBRARIES)
 
@@ -90,13 +90,13 @@ tidy:
 	clang-tidy-11 -p . --fix --fix-errors $(C_FILES) -- $(CSTD) $(OPTFLAGS) $(IINC) $(WARNINGS) $(CFLAGS)
 
 .PHONY: all clean distclean format tidy
-.DEFAULT_GOAL := build/cas.elf
+.DEFAULT_GOAL := build/cime.elf
 .SECONDARY:
 
 
 #### Binaries ####
 
-build/cas.elf: $(CAS_O_FILES) $(INSTR_LEX_O_FILES) | $(LIBRARIES)
+build/cime.elf: $(CAS_O_FILES) $(INSTR_LEX_O_FILES) | $(LIBRARIES)
 
 
 #### Various Recipes ####

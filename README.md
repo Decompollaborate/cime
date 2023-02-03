@@ -1,1 +1,3 @@
-# cas (crappy_assembler)
+# cime
+
+Crappy Instruction Mips Encoder
